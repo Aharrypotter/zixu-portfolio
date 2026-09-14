@@ -4,9 +4,9 @@
 .flaglang-preview-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line)}.flaglang-preview-grid>a{padding:30px 25px 30px 0;border-bottom:1px solid var(--line)}.flaglang-preview-grid>a:nth-child(even){padding-left:30px;border-left:1px solid var(--line)}.flaglang-preview-grid span{font:11px monospace;color:var(--muted)}.flaglang-preview-grid h3{font-size:24px;line-height:1.5;margin:18px 0 10px}.flaglang-preview-grid p{font-size:14px;color:var(--muted);line-height:1.8}.flaglang-preview-grid a:hover h3{color:#617b37}@media(max-width:600px){.flaglang-preview-grid{grid-template-columns:1fr}.flaglang-preview-grid>a,.flaglang-preview-grid>a:nth-child(even){padding:25px 0;border-left:0}.flaglang-preview-grid h3{font-size:22px}}
 
 /* About: bounded copy and portrait at every viewport size. */
-.about-grid.about-with-portrait{grid-template-columns:minmax(0,720px) minmax(160px,220px);gap:clamp(32px,6vw,88px);justify-content:space-between;align-items:start}
-.about-copy{min-width:0}.about-copy h2{margin:0 0 28px}.about-copy p{overflow-wrap:anywhere}
-.about-portrait{margin:8px 0 0;width:100%;max-width:220px;min-width:0;justify-self:end}
+.about-grid.about-with-portrait{grid-template-columns:minmax(0,1fr) 190px;gap:clamp(32px,4vw,64px);align-items:start;max-width:1000px;margin-inline:auto}
+.about-copy{min-width:0}.about .section-top{max-width:1000px;margin-inline:auto}.about.section{padding-inline:clamp(24px,5vw,80px)}.about-copy h2{margin:0 0 28px}.about-copy p{overflow-wrap:anywhere}
+.about-portrait{margin:8px 0 0;width:100%;max-width:190px;min-width:0;justify-self:end}
 .about-portrait img{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:2/3;border-radius:3px}
 .about-portrait figcaption{margin-top:14px;font-size:14px}.about-portrait figcaption span{display:block;font-size:10px;letter-spacing:.14em;color:#777;margin-top:5px}
 @media(max-width:700px){.about-grid.about-with-portrait{grid-template-columns:minmax(0,1fr);gap:28px}.about-portrait{justify-self:start;width:140px;margin:0}}
