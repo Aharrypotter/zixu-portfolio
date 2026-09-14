@@ -1,0 +1,1845 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+  "count": 70,
+  "byPR": {
+    "UbiquitousLearning/mllm#690": {
+      "problem": [
+        "mllm 缺少 Qwen3.5-0.8B 的手机 CPU 推理路径。",
+        "Qwen3.5-0.8B needed a mobile CPU inference path."
+      ],
+      "change": [
+        "接入模型结构、权重转换与运行入口，将 GDN 循环状态和注意力 KV 状态接入混合模型执行。",
+        "Adds the model, conversion and runner, including recurrent GDN and attention cache state."
+      ],
+      "scope": [
+        "针对 0.8B 文本模型；多模态及 4B 扩展由后续 PR 单独完成。",
+        "The 0.8B text path is distinct from later multimodal and 4B extensions."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/690",
+      "sourceHead": "1d6fabb5ffef24fdba9794962a70f31d7027f8eb",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 37,
+      "implementationFiles": [
+        "examples/CMakeLists.txt",
+        "examples/qwen3_5/CMakeLists.txt",
+        "examples/qwen3_5/config_0.8B_w4a32_kai.json",
+        "examples/qwen3_5/main.cpp"
+      ],
+      "testFiles": [
+        "pymllm/mobile/tests/test_convertor.py",
+        "tests/core/ARGenerationTest.cpp",
+        "tests/core/CMakeLists.txt",
+        "tests/cpu/CMakeLists.txt"
+      ]
+    },
+    "UbiquitousLearning/mllm#691": {
+      "problem": [
+        "已有 0.8B 路径还不能直接承担 Qwen3.5-4B 的模型规模与运行约束。",
+        "The existing 0.8B path needed a separate Qwen3.5-4B model contract."
+      ],
+      "change": [
+        "补充 4B 配置、转换和手机 CPU 运行支持，复用混合注意力与 GDN 执行基础。",
+        "Adds 4B configuration, conversion and mobile CPU execution on the hybrid attention foundation."
+      ],
+      "scope": [
+        "这里是 4B 文本支持；不把后续 #698 的视觉能力计入本 PR。",
+        "This is text support; the later visual extension belongs to #698."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/691",
+      "sourceHead": "390f1f14c95a3416243d2cf15a0b54a28f5278fe",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 14,
+      "implementationFiles": [
+        "examples/qwen3_5/config_0.8B_w4a32_kai.json",
+        "examples/qwen3_5/config_4B_w4a32_kai.json",
+        "examples/qwen3_5/main.cpp",
+        "examples/qwen3_5/quant_cfg_4B_w4a32_kai.json"
+      ],
+      "testFiles": [
+        "examples/qwen3_5/test_validators.py",
+        "pymllm/mobile/tests/test_convertor.py",
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/Qwen35ConfigTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#693": {
+      "problem": [
+        "GDN depthwise causal convolution 的标量计算增加了 ARM 推理开销。",
+        "Scalar GDN depthwise causal convolution added ARM inference overhead."
+      ],
+      "change": [
+        "为 AArch64 卷积路径加入向量化，围绕通道计算与卷积历史状态优化已有 Kernel。",
+        "Vectorizes the existing AArch64 convolution path while retaining its history-state contract."
+      ],
+      "scope": [
+        "优化对象是 GDN 卷积；不能由单算子结果推导整个模型的加速倍数。",
+        "A convolution-kernel optimization, not a claim of equivalent full-model speedup."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/693",
+      "sourceHead": "d32364cecc393432fe75b17fdaeb46d5bdab4676",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 10,
+      "implementationFiles": [
+        "examples/qwen3_5/benchmark_harness.hpp",
+        "examples/qwen3_5/main.cpp",
+        "mllm/backends/cpu/kernels/common/gdn/gated_delta_net.cpp",
+        "mllm/models/ARGeneration.cpp"
+      ],
+      "testFiles": [
+        "tests/core/ARGenerationTest.cpp",
+        "tests/core/CMakeLists.txt",
+        "tests/core/Qwen35BenchmarkHarnessTest.cpp",
+        "tests/cpu/CMakeLists.txt"
+      ]
+    },
+    "UbiquitousLearning/mllm#694": {
+      "problem": [
+        "GDN recurrence 的并行 lane 上限限制了已有 CPU 执行路径。",
+        "The GDN recurrence path capped parallel lanes at four."
+      ],
+      "change": [
+        "将 lane cap 从 4 提高到 8，并修复验证暴露的 splitTask 悬空引用；任务按独立状态区间划分。",
+        "Raises the lane cap to eight and fixes a splitTask dangling-reference bug exposed by validation, keeping task state regions disjoint."
+      ],
+      "scope": [
+        "这是特定执行参数的优化，不是新的 GDN 算法；收益依赖工作负载和设备。",
+        "A workload-dependent scheduling change, not a new GDN algorithm."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/694",
+      "sourceHead": "67f23f9bc353e32ca0c08dbd1472db9e5b68db9d",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 4,
+      "implementationFiles": [
+        "mllm/backends/cpu/kernels/common/gdn/gated_delta_net.cpp",
+        "mllm/engine/HpcThreadPool.cpp",
+        "mllm/engine/HpcThreadPool.hpp"
+      ],
+      "testFiles": [
+        "tests/cpu/Qwen35GDNTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#695": {
+      "problem": [
+        "文本模型不能直接处理图像中的视觉信息。",
+        "The text-only model could not consume visual information."
+      ],
+      "change": [
+        "为 Qwen3.5-0.8B 加入单图预处理、视觉编码、视觉嵌入接入和多模态位置编码，使图像进入生成流程。",
+        "Adds single-image preprocessing, vision encoding, embedding injection and multimodal position handling for Qwen3.5-0.8B."
+      ],
+      "scope": [
+        "单图 CPU 路径与多图、视频能力分别验证；不将图像演示泛化为所有视觉任务精度。",
+        "Single-image CPU support is separate from multi-image and video extensions."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/695",
+      "sourceHead": "f10ea711e27c53a6c4505686951897c71f4376e7",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 16,
+      "implementationFiles": [
+        "examples/qwen3_5/config_0.8B_multimodal_w4a32_kai.json",
+        "examples/qwen3_5/main.cpp",
+        "examples/qwen3_5/quant_cfg_0.8B_multimodal_w4a32_kai.json",
+        "examples/qwen3_5/validate_checkpoint.py"
+      ],
+      "testFiles": [
+        "examples/qwen3_5/test_validators.py",
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/Qwen35ConfigTest.cpp",
+        "tests/cpu/Qwen35MultimodalTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#696": {
+      "problem": [
+        "多张图片需要保持顺序、各自的位置编码和视觉注意力隔离。",
+        "Multiple images require ordering, positional alignment and independent visual attention."
+      ],
+      "change": [
+        "支持重复 image_path 参数，逐图 resize 和编码，再按提示词顺序拼接视觉嵌入并检查图像 span。",
+        "Encodes each image separately, then joins embeddings in prompt order with validated spans and image grids."
+      ],
+      "scope": [
+        "PR 包含手机双图演示及单图回归；逐图编码不等于把所有 patch 混在一次视觉注意力中。",
+        "Includes phone demonstrations and single-image regression coverage; image attention remains isolated."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/696",
+      "sourceHead": "bc64f0abecca9cf1c150de5affffbc76fb33118d",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 9,
+      "implementationFiles": [
+        "examples/qwen3_5/main.cpp",
+        "mllm/models/qwen3_5/image_preprocessor_qwen3_5.hpp",
+        "mllm/models/qwen3_5/modeling_qwen3_5.hpp",
+        "mllm/models/qwen3_5/modeling_qwen3_5_vision.hpp"
+      ],
+      "testFiles": [
+        "tests/cpu/Qwen35MultimodalTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#697": {
+      "problem": [
+        "静态图片入口无法表达短视频的时间顺序。",
+        "A still-image interface does not represent temporal ordering."
+      ],
+      "change": [
+        "为 Qwen3.5-0.8B 接入有界短视频 CPU 路径，把视频帧、时间信息和视觉输入组织进生成请求。",
+        "Adds a bounded short-video CPU path for Qwen3.5-0.8B, organizing frames and temporal information for generation."
+      ],
+      "scope": [
+        "默认 decoder 为 none，H.264 MP4 参考后端需外部依赖；帧数和输入容量有界，不支持任意长视频。",
+        "Decoder defaults to none; the optional H.264 MP4 backend needs external dependencies. Frame and input sizes are bounded."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/697",
+      "sourceHead": "aa8b2ebbde76a1cd2f6f3f98f0b3b0e49d81fcad",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 15,
+      "implementationFiles": [
+        "CMakeLists.txt",
+        "examples/qwen3_5/CMakeLists.txt",
+        "examples/qwen3_5/main.cpp",
+        "examples/qwen3_5/video_decoder.cpp"
+      ],
+      "testFiles": [
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/Qwen35MultimodalTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#698": {
+      "problem": [
+        "4B 视觉塔的层数和宽度不同，不能简单套用 0.8B 多模态配置。",
+        "The 4B vision tower differs from the 0.8B geometry."
+      ],
+      "change": [
+        "支持 4B 的 24 层、1024 隐藏维视觉塔；新增独立多模态配置与 W4A32 转换规则，保持 0.8B 校验。",
+        "Adds its 24-layer, width-1024 contract and separate multimodal conversion settings without weakening 0.8B validation."
+      ],
+      "scope": [
+        "PR 展示单图、多图和有界短视频手机结果；它扩展已有路径，没有另造多模态运行时。",
+        "Extends existing image, multi-image and bounded-video paths; phone demonstrations are reported in the PR."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/698",
+      "sourceHead": "55e59c30dbecb524467ae42514a24b8bdc2f232a",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 7,
+      "implementationFiles": [
+        "examples/qwen3_5/config_4B_multimodal_w4a32_kai.json",
+        "examples/qwen3_5/quant_cfg_4B_multimodal_w4a32_kai.json",
+        "examples/qwen3_5/validate_checkpoint.py",
+        "mllm/models/qwen3_5/configuration_qwen3_5.hpp"
+      ],
+      "testFiles": [
+        "examples/qwen3_5/test_validators.py",
+        "tests/cpu/Qwen35ConfigTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#699": {
+      "problem": [
+        "Ling 混合 KDA、Gated MLA 与 MoE，不能直接复用普通 Transformer 图。",
+        "Ling mixes KDA, gated MLA and MoE rather than a conventional Transformer stack."
+      ],
+      "change": [
+        "注册 KimiDeltaAttention 算子和 CPU Kernel；卷积复用既有算子，Gated MLA 由现有算子组合，接入转换与文本生成。",
+        "Adds a registered KDA operation and CPU kernel, reusing existing convolution and composing MLA from existing operations."
+      ],
+      "scope": [
+        "新增的是 KDA，不是新 MLA 或卷积 Kernel；范围是指定 Ling-3.0-tiny 检查点的文本 CPU 支持。",
+        "Pinned Ling-3.0-tiny text support; this does not introduce a new MLA or convolution kernel."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/699",
+      "sourceHead": "0aa7d264281462a13c64dc49627966c58fcba6b0",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 53,
+      "implementationFiles": [
+        "examples/CMakeLists.txt",
+        "examples/ling3/CMakeLists.txt",
+        "examples/ling3/config_tiny_w4a32_kai.json",
+        "examples/ling3/main.cpp"
+      ],
+      "testFiles": [
+        "examples/ling3/test_validators.py",
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/KaiW4A32PackTest.cpp",
+        "tests/cpu/KernelTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#700": {
+      "problem": [
+        "按 query head 重复存储 K/V 会放大 GQA 模型的缓存占用。",
+        "Replicating K/V across query heads inflates GQA cache storage."
+      ],
+      "change": [
+        "接入 MiniCPM5-1B，并引入原生 KV-head 缓存和正式 GQA decode 算子；缓存与请求状态由模型层管理。",
+        "Adds MiniCPM5-1B, native KV-head storage and a registered GQA decode operation with explicit cache ownership."
+      ],
+      "scope": [
+        "PR 区分主机算子测试与保留 Kernel 的历史设备结果；不是 PagedAttention，也不将旧设备结果当作新包装层复测。",
+        "Not PagedAttention. Host operation checks and retained-kernel device results have different revision boundaries."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/700",
+      "sourceHead": "25fda785d288545c061161c54d42ddfe6ff3cd58",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 48,
+      "implementationFiles": [
+        "examples/CMakeLists.txt",
+        "examples/minicpm5/CMakeLists.txt",
+        "examples/minicpm5/benchmark_harness.hpp",
+        "examples/minicpm5/config_1B_w4a32_kai.json"
+      ],
+      "testFiles": [
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/MiniCPM5ConfigTest.cpp",
+        "tests/cpu/MiniCPM5ModelTest.cpp",
+        "tests/cpu/MiniCPM5TokenizerTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#701": {
+      "problem": [
+        "LFM2.5 的短卷积与全注意力交替，需要独立历史状态和 KV 槽位。",
+        "LFM2.5 interleaves short convolutions and full attention with different state needs."
+      ],
+      "change": [
+        "实现 30 层模型、分词、W4A32 转换和生成入口，管理 22 份卷积历史与 8 个注意力 KV 槽，注册模型计算算子。",
+        "Adds the 30-layer text model, tokenizer, conversion and runner, with 22 convolution histories and eight KV slots."
+      ],
+      "scope": [
+        "是指定 LFM2.5-2.6B 文本模型的 ARM 路径；状态重置和生成验证不等于所有模型复用该优化都有效。",
+        "Scoped to the pinned LFM2.5-2.6B ARM path; its state and generation checks do not generalize to every model."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/701",
+      "sourceHead": "17897b99bf1db963d4a6ea605e7700cb663482fa",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 85,
+      "implementationFiles": [
+        "benchmarks/cpu/CMakeLists.txt",
+        "benchmarks/cpu/lfm2_parallel_linear.cpp",
+        "benchmarks/cpu/lfm2_parallel_linear_shared_mx.cpp",
+        "examples/CMakeLists.txt"
+      ],
+      "testFiles": [
+        "examples/lfm2/test_validators.py",
+        "tests/cpu/CausalDepthwiseConvKernelTest.hpp",
+        "tests/cpu/KernelTest.cpp",
+        "tests/cpu/ParallelLinearKernelTest.hpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#704": {
+      "problem": [
+        "模型直接调用后端 GDN Kernel，绕过了框架统一的算子与 IR 接口。",
+        "Model code called GDN backend kernels directly, bypassing the framework boundary."
+      ],
+      "change": [
+        "注册 GatedDeltaRule，复用 CausalDepthwiseConv1D；将循环状态显式作为输入输出，并按 Kernel、算子、模型分层组织测试。",
+        "Registers GatedDeltaRule, reuses causal convolution and makes recurrent state explicit across public operations and IR."
+      ],
+      "scope": [
+        "重点是框架集成和状态契约，不把既有 Kernel 重构描述成新的性能突破。",
+        "A runtime integration and state-contract refactor, not a new kernel speedup."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/704",
+      "sourceHead": "e0252d959a9d5f29912f8f12c85081d5ae1baaf4",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 33,
+      "implementationFiles": [
+        "mllm/backends/cpu/CPUBackend.cpp",
+        "mllm/backends/cpu/ops/GatedDeltaRuleOp.cpp",
+        "mllm/backends/cpu/ops/GatedDeltaRuleOp.hpp",
+        "mllm/compile/ir/GeneratedRTTIKind.hpp"
+      ],
+      "testFiles": [
+        "tests/CMakeLists.txt",
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/CausalDepthwiseConvCurrentFirstKernelTest.hpp",
+        "tests/cpu/GatedDeltaRuleKernelTest.hpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#706": {
+      "problem": [
+        "模型契约测试与 CPU Kernel 测试混放，缺少独立 GQA Kernel 对照。",
+        "Model-contract and CPU-kernel tests were mixed, with a missing direct GQA kernel oracle."
+      ],
+      "change": [
+        "把 MiniCPM5 配置、分词和模型测试迁到 tests/models，补充 CTest 注册、设备配置路径覆盖和 GQA Kernel 测试。",
+        "Moves MiniCPM5 tests into the model suite and adds CTest registration, device path overrides and GQA kernel coverage."
+      ],
+      "scope": [
+        "这是测试组织与覆盖补齐，不是新增模型能力或推理性能优化。",
+        "Test organization and coverage, not a new inference capability or speedup."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/706",
+      "sourceHead": "7c4223ce1debfacb0c1acee760352d3aecb43b17",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 9,
+      "implementationFiles": [],
+      "testFiles": [
+        "tests/cpu/CMakeLists.txt",
+        "tests/cpu/GqaDecodeKernelTest.hpp",
+        "tests/cpu/KernelTest.cpp",
+        "tests/models/CMakeLists.txt"
+      ]
+    },
+    "UbiquitousLearning/mllm#707": {
+      "problem": [
+        "各模型分别拼接聊天提示词，难以统一工具、模板参数和特殊内容的语义。",
+        "Per-model prompt assembly made chat-template semantics hard to maintain."
+      ],
+      "change": [
+        "引入 ChatPreprocessor 与模型级 legacy/Jinja 选择，使用固定版本 jinja.cpp 并迁移首批模型，对照 Transformers 模板结果。",
+        "Adds ChatPreprocessor with legacy/Jinja selection, a pinned template engine and model migrations checked against Transformers."
+      ],
+      "scope": [
+        "基础接口和模型迁移共同组成此 PR；默认路径保持字节稳定，不意味着任意 Jinja 模板已兼容。",
+        "The foundation and migrations belong together; byte-stable defaults do not imply universal Jinja compatibility."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/707",
+      "sourceHead": "320515fed94292c975eb4533337946768735215d",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 48,
+      "implementationFiles": [
+        ".gitmodules",
+        "CMakeLists.txt",
+        "examples/minicpm4/main.cpp",
+        "examples/minicpm5/main.cpp"
+      ],
+      "testFiles": [
+        "tests/CMakeLists.txt",
+        "tests/cpu/MiniCPM5TokenizerTest.cpp",
+        "tests/models/qwen3_5/Qwen35TokenizerTest.cpp",
+        "tests/preprocessor/CMakeLists.txt"
+      ]
+    },
+    "UbiquitousLearning/mllm#708": {
+      "problem": [
+        "MiniCPM5-2B 的层数和维度不同，错误配置需要在生成前被识别。",
+        "MiniCPM5-2B needs its own geometry and model/config mismatch checks."
+      ],
+      "change": [
+        "新增 2B 运行配置及 KAI W4A32 转换规则，保留 1B 模型并检查权重与配置匹配。",
+        "Adds size-specific runtime and KAI W4A32 conversion settings while preserving 1B support."
+      ],
+      "scope": [
+        "这是模型规模扩展；模型图、GQA Kernel、分词器和运行时线程机制复用已有实现。",
+        "A model-size extension; it reuses the graph, GQA kernel, tokenizer and runtime threading."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/708",
+      "sourceHead": "f101bec39808f790fc4911341c84836ba2dba706",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 9,
+      "implementationFiles": [
+        "examples/minicpm5/config_2B_w4a32_kai.json",
+        "examples/minicpm5/main.cpp",
+        "examples/minicpm5/quant_cfg_2B_w4a32_kai.json",
+        "mllm/models/minicpm5/configuration_minicpm5.hpp"
+      ],
+      "testFiles": [
+        "tests/models/minicpm5/MiniCPM5ConfigTest.cpp",
+        "tests/models/minicpm5/MiniCPM5ModelTest.cpp"
+      ]
+    },
+    "UbiquitousLearning/mllm#709": {
+      "problem": [
+        "Spark 的滑动/全局注意力混合、逐头门控与两种 RoPE 几何需要精确建模。",
+        "Spark combines sliding/full attention, headwise gates and two RoPE geometries."
+      ],
+      "change": [
+        "实现 Spark-X2.5-1.7B 的模型、分词、转换和单轮生成；用显式选项扩展 GELU、Sigmoid 与 GQA，保持旧默认行为。",
+        "Adds its model, tokenizer, converter and generation runner, extending existing operations through explicit options."
+      ],
+      "scope": [
+        "覆盖 FP32 与 ARM W4A32 路径；是否合并以状态标记为准，不能把提交评审等同正式发布。",
+        "FP32 and ARM W4A32 paths are scoped separately; submission is not the same as a release."
+      ],
+      "source": "https://github.com/UbiquitousLearning/mllm/pull/709",
+      "sourceHead": "0de602e4e314ceb6776ef0c743a9d356992d6856",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 37,
+      "implementationFiles": [
+        "examples/CMakeLists.txt",
+        "examples/spark2_5/CMakeLists.txt",
+        "examples/spark2_5/config_1.7B_fp32.json",
+        "examples/spark2_5/config_1.7B_w4a32_kai.json"
+      ],
+      "testFiles": [
+        "tests/models/CMakeLists.txt",
+        "tests/models/spark2_5/CMakeLists.txt",
+        "tests/models/spark2_5/SparkTest.cpp",
+        "tests/nn/CMakeLists.txt"
+      ]
+    },
+    "flagos-ai/FlagTree#990": {
+      "problem": [
+        "内存描述符误继承寄存器张量的二次幂约束，导致 3、5、6 级流水线无法编译。",
+        "Memory descriptors incorrectly inherited power-of-two register-tensor restrictions."
+      ],
+      "change": [
+        "拆出正静态形状的内存描述符类型，并逐槽初始化 close tag，避免 native lowering 再次构造非法寄存器张量。",
+        "Separates descriptor shape validation and initializes close tags per slot, removing the restriction at both compiler layers."
+      ],
+      "scope": [
+        "PR 报告 H20 六级真实算子验证；没有放宽普通寄存器张量规则，也不会自动修改用户 stage 数。",
+        "Reports an H20 six-stage kernel check; register-tensor rules and user stage choices remain unchanged."
+      ],
+      "source": "https://github.com/flagos-ai/FlagTree/pull/990",
+      "sourceHead": "d817794488017d8bcbfc408d8b52128ab44f6537",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 5,
+      "implementationFiles": [
+        "python/triton/experimental/tle/language/gpu/types.py",
+        "third_party/tle/dialect/lib/Transforms/TleLowerPipeToNvws.cpp"
+      ],
+      "testFiles": [
+        "python/test/tle/unit/test_tle.py",
+        "python/test/tle/unit/test_tle_gpu_slot.py",
+        "third_party/tle/test/GPU/test_tle_lower_pipe_to_nvws.mlir"
+      ]
+    },
+    "flagos-ai/FlagTree#991": {
+      "problem": [
+        "绝对迭代索引反复展开除法和取模，丢失了顺序循环可递推的游标信息。",
+        "Absolute iteration indices repeatedly expand division and modulo in sequential loops."
+      ],
+      "change": [
+        "新增携带 stage 与 phase 的 pipe_cursor，通过递增、回绕和翻转推进，同时保留旧迭代索引接口。",
+        "Introduces a loop-carried stage/phase cursor advanced by increment, wrap and phase toggle."
+      ],
+      "scope": [
+        "必须由 Kernel 显式采用；指令减少不能直接等同延迟减少，PR 的匹配实验分别报告两者。",
+        "Opt-in only; fewer instructions and lower latency are distinct outcomes in the matched experiment."
+      ],
+      "source": "https://github.com/flagos-ai/FlagTree/pull/991",
+      "sourceHead": "805d3863ad04f3cd989040e59c9a54860c610137",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 5,
+      "implementationFiles": [
+        "python/triton/experimental/tle/language/__init__.py",
+        "python/triton/experimental/tle/language/gpu/types.py",
+        "python/triton/experimental/tle/language/pipe.py"
+      ],
+      "testFiles": [
+        "python/test/tle/integration/test_tle_pipe_cursor.py",
+        "python/test/tle/unit/test_tle.py"
+      ]
+    },
+    "flagos-ai/FlagGems#5467": {
+      "problem": [
+        "持久 CTA 切换输出 tile 时重置代际，会让深流水线等待错误 barrier phase。",
+        "Persistent CTAs reset pipeline generations between output tiles, risking the wrong barrier phase."
+      ],
+      "change": [
+        "把 X/Y 缓冲与 barrier 改为一个多字段 typed pipe，并跨输出 tile 保持连续的逻辑迭代和代际。",
+        "Unifies X/Y storage and barriers in a typed pipe and keeps logical iterations continuous across tiles."
+      ],
+      "scope": [
+        "恢复 Hopper FP8 einsum 的 stage-8 路径；性能比较限定 H20 代表形状及相同 CUDA Graph 测量方式。",
+        "Restores stage eight for Hopper FP8 einsum; performance comparisons are tied to the matched H20 workload."
+      ],
+      "source": "https://github.com/flagos-ai/FlagGems/pull/5467",
+      "sourceHead": "ba9cffa261a4f41842da1c8acbcdc0307db2a9ca",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "src/flag_gems/runtime/backend/_nvidia/hopper/ops/w8a8_block_fp8_bmm.py"
+      ],
+      "testFiles": [
+        "tests/test_fp8_einsum.py"
+      ]
+    },
+    "inclusionAI/cuLA#108": {
+      "problem": [
+        "cuLA 需要与自身接口和状态约定一致的 Hopper GDN prefill 后端。",
+        "cuLA needed a Hopper GDN prefill path matching its API and state conventions."
+      ],
+      "change": [
+        "移植上游 512 线程 CuTe DSL GDN 算法并保留来源署名，接入 packed 序列、可选 gate 与初始/最终状态。",
+        "Ports the upstream 512-thread CuTe DSL algorithm with provenance, integrating packed sequences, optional gates and recurrent state."
+      ],
+      "scope": [
+        "属于 Gated DeltaNet，不与 Lightning Attention 或 GDN2 的实现、性能结果混用。",
+        "Gated DeltaNet is distinct from Lightning Attention and GDN2; their results are not interchangeable."
+      ],
+      "source": "https://github.com/inclusionAI/cuLA/pull/108",
+      "sourceHead": "88737e9d906cf313995a092624656a89d74dd65e",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 22,
+      "implementationFiles": [
+        "benchmarks/bench_gdn_prefill.py",
+        "cula/gdn/__init__.py",
+        "cula/gdn/prefill.py",
+        "cula/ops/gdn/__init__.py"
+      ],
+      "testFiles": [
+        "tests/gdn/__init__.py",
+        "tests/gdn/collective_inverse_reference.py",
+        "tests/gdn/published_aux_reference.py",
+        "tests/gdn/test_prefill_sm90.py"
+      ]
+    },
+    "inclusionAI/cuLA#111": {
+      "problem": [
+        "循环注意力 prefill 需要同时处理矩阵计算、跨 chunk 状态和变长序列。",
+        "Recurrent-attention prefill combines matrix work, cross-chunk state and variable-length sequences."
+      ],
+      "change": [
+        "实现 SM90 CuTe DSL 流水线，使用 TMA/WGMMA 与寄存器中的 FP32 状态，处理 packed 尾块和持久调度。",
+        "Builds an SM90 CuTe DSL pipeline with TMA/WGMMA, register-resident FP32 state and packed-tail handling."
+      ],
+      "scope": [
+        "2.89× 是指定 H20 BF16 prefill 主测试集相对 FLA 的几何平均结果，不是端到端 serving 加速。",
+        "The reported 2.89× is a specified H20 BF16 kernel-suite result versus FLA, not serving speedup."
+      ],
+      "source": "https://github.com/inclusionAI/cuLA/pull/111",
+      "sourceHead": "ffd1291be68642e6137b96285c24fab648169385",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 19,
+      "implementationFiles": [
+        "benchmarks/bench_lightning_attn_prefill.py",
+        "benchmarks/generate_benchmark_md.py",
+        "cula/lightning/__init__.py",
+        "cula/ops/lightning/__init__.py"
+      ],
+      "testFiles": [
+        "tests/lightning_attn_reference.py",
+        "tests/test_lightning_attn_prefill_dispatch.py",
+        "tests/test_lightning_attn_prefill_sm90.py"
+      ]
+    },
+    "inclusionAI/cuLA#113": {
+      "problem": [
+        "GDN2 融合 prefill 既要减少中间步骤，也要避免合法衰减输入使指数计算溢出。",
+        "Fused GDN2 prefill must also avoid exponent overflow for valid decay inputs."
+      ],
+      "change": [
+        "实现 packed SM90 GDN2，并对 chunk 内因子做分块重基准化；加入独立逐 token 参考及边界、极端衰减测试。",
+        "Adds packed SM90 GDN2 with blockwise-rebased factors and independent tokenwise, boundary and adversarial references."
+      ],
+      "scope": [
+        "公开修订已否定早期溢出版本的 2.379×；当前报告是五行 H20 测试的 2.165×，不外推到全部输入或 serving。",
+        "The rejected 2.379× revision is superseded by a reported 2.165× on five H20 cases, not all inputs or serving."
+      ],
+      "source": "https://github.com/inclusionAI/cuLA/pull/113",
+      "sourceHead": "36a494624922841f573a43ff2a0354791cfa2cca",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 21,
+      "implementationFiles": [
+        "benchmarks/bench_gdn2_prefill.py",
+        "cula/gdn2/__init__.py",
+        "cula/gdn2/prefill.py",
+        "cula/ops/gdn2/__init__.py"
+      ],
+      "testFiles": [
+        "tests/gdn2/__init__.py",
+        "tests/gdn2/reference.py",
+        "tests/gdn2/run_compute_sanitizer_sm90.sh",
+        "tests/gdn2/stress_gdn2_sm90.py"
+      ]
+    },
+    "mingti-org/phyai#56": {
+      "problem": [
+        "分开的 Gate/Up、GeGLU 与量化步骤会产生 BF16 中间张量和额外 launch。",
+        "Separate projection, GeGLU and quantization steps create intermediates and extra launches."
+      ],
+      "change": [
+        "为 Thor SM110 固定 pi0.5 MLP 形状融合投影、激活折叠及 NVFP4 输出，直接供后续 down projection 使用。",
+        "Fuses Gate/Up projection, activation folding and NVFP4 output for fixed pi0.5 shapes on Thor SM110."
+      ],
+      "scope": [
+        "这是显式启用的底层 Kernel 草案；没有修改模型默认分发、权重加载或转换流程。",
+        "An opt-in low-level kernel proposal; default model dispatch and weight conversion are not changed."
+      ],
+      "source": "https://github.com/mingti-org/phyai/pull/56",
+      "sourceHead": "e44875cce92374002339164b123624cb9295fc35",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 7,
+      "implementationFiles": [
+        "phyai-kernel/benchmark/bench_pi05_thor_nvfp4_geglu.py",
+        "phyai-kernel/phyai_kernel/__init__.py",
+        "phyai-kernel/phyai_kernel/cuda/__init__.py",
+        "phyai-kernel/phyai_kernel/cuda/csrc/pi05_thor_nvfp4_geglu.cuh"
+      ],
+      "testFiles": [
+        "phyai-kernel/tests/test_pi05_thor_nvfp4_geglu.py"
+      ]
+    },
+    "sgl-project/sglang-jax#1539": {
+      "problem": [
+        "Qwen3.5 的 MoE、共享专家和 GDN 输出分别归约，不能直接套用单一路径的序列并行。",
+        "Qwen3.5 reduces routed experts, shared experts and GDN outputs at separate boundaries."
+      ],
+      "change": [
+        "每层生成统一目标 sharding，将其传给两个专家分支、注意力输出、路由、token mask 与残差，按阈值启用 scatter。",
+        "Threads one per-layer target sharding through projections, routing, token masks and residuals with threshold-gated scattering."
+      ],
+      "scope": [
+        "重点是混合 GDN+MoE 的布局一致性；不能把单一拓扑测试推广成所有并行配置的收益。",
+        "Scoped to the hybrid path; one topology does not establish benefits for every parallel configuration."
+      ],
+      "source": "https://github.com/sgl-project/sglang-jax/pull/1539",
+      "sourceHead": "0040b28a6086bb84a38b8712ce508c5dd74974de",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 5,
+      "implementationFiles": [
+        "python/sgl_jax/srt/models/qwen2_moe.py",
+        "python/sgl_jax/srt/models/qwen3_5.py"
+      ],
+      "testFiles": [
+        "python/sgl_jax/test/layers/test_sequence_parallel.py",
+        "python/sgl_jax/test/models/test_qwen3_5.py",
+        "test/srt/run_suite.py"
+      ]
+    },
+    "sgl-project/sglang-jax#1540": {
+      "problem": [
+        "EP16 下 2032-token bucket 每设备分到 127 行，违反 BF16 MoE 的 tile 对齐要求。",
+        "An EP16 bucket of 2032 tokens produces 127 local rows, violating BF16 MoE tile alignment."
+      ],
+      "change": [
+        "分离逻辑与 launch 长度，在设备内补齐 tokens、路由 ID 和权重，再裁回逻辑输出；补齐行不路由到任何专家。",
+        "Separates logical and launch extents, pads tokens and routing locally, then slices outputs back to their logical shape."
+      ],
+      "scope": [
+        "已合法形状不增加 pad；修复预编译形状问题，不修改调度器对外 bucket 或宣称数值精度提升。",
+        "Legal shapes remain untouched; this fixes compilation alignment rather than changing scheduler buckets or accuracy."
+      ],
+      "source": "https://github.com/sgl-project/sglang-jax/pull/1540",
+      "sourceHead": "1121945acd1bf6f27106d592adcfa7920ec5eed6",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 6,
+      "implementationFiles": [
+        "python/sgl_jax/srt/kernels/fused_moe/token_padding.py",
+        "python/sgl_jax/srt/kernels/fused_moe/v1/kernel.py"
+      ],
+      "testFiles": [
+        "python/sgl_jax/test/kernels/fused_moe_v1_test.py",
+        "python/sgl_jax/test/kernels/test_fused_moe_token_padding.py",
+        "python/sgl_jax/test/test_compilation_manager.py",
+        "test/srt/run_suite.py"
+      ]
+    },
+    "sgl-project/sglang-jax#1057": {
+      "problem": [
+        "JAX 升级后严格检查 shard_map，原来被隐式修正的分片问题暴露出来。",
+        "Stricter JAX shard_map checks exposed formerly implicit layout fixes."
+      ],
+      "change": [
+        "提出 0.9.2 / libtpu 升级，调整多个后端 API 和分片推导，并强化 LoRA batch 元数据与槽位校验。",
+        "Proposes the 0.9.2/libtpu migration with backend compatibility work and explicit LoRA batching contracts."
+      ],
+      "scope": [
+        "这是较早的综合升级方案；最终 0.10.2 迁移见 #1461，不能将两份提案重复算成两次最终交付。",
+        "An earlier broad proposal; the final 0.10.2 migration is #1461, not a second instance of the same delivery."
+      ],
+      "source": "https://github.com/sgl-project/sglang-jax/pull/1057",
+      "sourceHead": "1e876aee52cf672827294f2d53e08eeaf6c31de9",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 35,
+      "implementationFiles": [
+        "python/pyproject.toml",
+        "python/sgl_jax/srt/kernels/fused_moe/v1/kernel.py",
+        "python/sgl_jax/srt/kernels/ragged_paged_attention/ragged_paged_attention_v3.py",
+        "python/sgl_jax/srt/kernels/update_kv_cache/update_kv_cache.py"
+      ],
+      "testFiles": [
+        "python/sgl_jax/test/kernels/fused_moe_v1_test.py",
+        "python/sgl_jax/test/mem_cache/test_kv_cache.py",
+        "python/sgl_jax/test/test_bailing_moe_linear.py",
+        "python/sgl_jax/test/test_flashattention.py"
+      ]
+    },
+    "sgl-project/sglang-jax#1286": {
+      "problem": [
+        "按可整除性猜测 sharding，无法代表数组在运行或 tracing 时的真实布局。",
+        "Divisibility heuristics cannot establish an array’s actual sharding."
+      ],
+      "change": [
+        "抽出 effective_axis，读取实际 NamedSharding 或 tracer sharding，返回该维度是否确实采用目标轴。",
+        "Adds effective_axis to inspect concrete or tracer sharding and identify the partition axis actually used."
+      ],
+      "scope": [
+        "该 PR 只增加工具与测试、没有调用者；不能单独宣称已修复所有后端。",
+        "A standalone utility with no callers in this PR; it does not by itself repair every backend."
+      ],
+      "source": "https://github.com/sgl-project/sglang-jax/pull/1286",
+      "sourceHead": "ab9bd61ce5490e41846a6a20d3cdfbae4338a934",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/sgl_jax/srt/utils/jax_utils.py"
+      ],
+      "testFiles": [
+        "python/sgl_jax/test/test_utils.py"
+      ]
+    },
+    "sgl-project/sglang-jax#1407": {
+      "problem": [
+        "FlashAttention 给复制的辅助数组声明分片 in_specs，触发新版 JAX 编译错误。",
+        "FlashAttention declared sharded specs for replicated auxiliary arrays."
+      ],
+      "change": [
+        "根据实际输入布局推导 FlashAttention 的输入输出规格，并补充读取分片的 helper。",
+        "Derives its boundary specs from actual input layouts and adds a sharding helper."
+      ],
+      "scope": [
+        "这是 #1057 拆出的局部方案，后被 #1461 替代；最终方案保留显式生产契约并修复生产端。",
+        "A narrower proposal from #1057, superseded by #1461’s explicit-contract and producer-fix approach."
+      ],
+      "source": "https://github.com/sgl-project/sglang-jax/pull/1407",
+      "sourceHead": "53edf04cac5bda3c04099e0c300abeff4bf61694",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 3,
+      "implementationFiles": [
+        "python/sgl_jax/srt/layers/attention/flashattention_backend.py",
+        "python/sgl_jax/srt/utils/jax_utils.py"
+      ],
+      "testFiles": [
+        "python/sgl_jax/test/test_jax_utils.py"
+      ]
+    },
+    "sgl-project/sglang-jax#1461": {
+      "problem": [
+        "JAX 0.10.2 的 API 变化和严格布局检查暴露 EAGLE3 权重生产端及测试 fixture 问题。",
+        "JAX 0.10.2 exposed EAGLE3 producer-layout defects and mismatched test fixtures."
+      ],
+      "change": [
+        "直接升级至 0.10.2，修复 v_proj 与量化 scale 布局，迁移 Pallas/mesh API，并使测试拓扑匹配生产输入。",
+        "Upgrades dependencies and APIs, repairs v_proj/scale layouts and aligns backend fixtures with production inputs."
+      ],
+      "scope": [
+        "不使用通用消费端 reshard 掩盖问题；TPU 后端、精度和 serving 检查有各自范围，本页不重新跑实验。",
+        "Avoids a generic consumer reshard workaround; TPU correctness and serving results have separate scopes."
+      ],
+      "source": "https://github.com/sgl-project/sglang-jax/pull/1461",
+      "sourceHead": "e6a01478f6e624243013b4aa75a85c1b368bbdf4",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 38,
+      "implementationFiles": [
+        "benchmark/kernels/update_kv_cache/bench_update_kv_cache.py",
+        "python/pyproject.toml",
+        "python/sgl_jax/srt/kernels/fused_mlp.py",
+        "python/sgl_jax/srt/kernels/fused_moe/v1/kernel.py"
+      ],
+      "testFiles": [
+        "python/sgl_jax/test/flashattention_common.py",
+        "python/sgl_jax/test/kernels/fused_moe_v1_test.py",
+        "python/sgl_jax/test/kernels/fused_moe_v2_test.py",
+        "python/sgl_jax/test/kernels/quantized_linear_test.py"
+      ]
+    },
+    "apache/tvm#18907": {
+      "problem": [
+        "PyTorch 对非 1 维度 squeeze 应保持输入不变，前端却无条件生成 squeeze。",
+        "PyTorch squeeze on a non-unit dimension should be a no-op."
+      ],
+      "change": [
+        "在静态维度已知时过滤非单位维度，覆盖单轴及多轴输入，动态维度保持保守处理。",
+        "Filters statically known non-unit dimensions before lowering, including multi-axis inputs."
+      ],
+      "scope": [
+        "回归针对 no-op 语义与导入 IR；不将消除冗余算子夸大为通用性能提升。",
+        "Regression coverage targets semantics and imported IR, not a general performance claim."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18907",
+      "sourceHead": "2a7c1a624d3f07e89fb7b7ef5e137a48c2a55fe7",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/torch/base_fx_graph_translator.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_from_exported_program.py"
+      ]
+    },
+    "apache/tvm#18910": {
+      "problem": [
+        "opset 低于所有支持版本时，负索引会误选最新 converter，悄悄使用不兼容语义。",
+        "An opset below every supported version could select the newest converter through negative indexing."
+      ],
+      "change": [
+        "改为显式筛选不高于模型 opset 的实现；没有兼容版本时报告最低支持版本。",
+        "Filters compatible versions explicitly and rejects unsupported minimum versions."
+      ],
+      "scope": [
+        "此条未合并，且 diff 含其他前端改动；同主题合并记录是 #18911，不重复计为已采用修复。",
+        "This unmerged record includes other frontend changes; the merged same-topic record is #18911."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18910",
+      "sourceHead": "4148ac97adacc77b5d8373fc686c4e33f0deec92",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 5,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py",
+        "python/tvm/relax/frontend/torch/base_fx_graph_translator.py",
+        "python/tvm/relax/frontend/torch/exported_program_translator.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_from_exported_program.py",
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#18911": {
+      "problem": [
+        "低 opset 的 ReduceMean 等算子可能误用新版本接口，产生错误形状而不报错。",
+        "Older operators could be routed to incompatible newer implementations without a clear error."
+      ],
+      "change": [
+        "修正 converter 版本选择，增加合法版本和低于最低版本的回归测试。",
+        "Fixes converter selection and adds supported-version and below-minimum regression cases."
+      ],
+      "scope": [
+        "解决版本路由错误，不意味着补齐所有旧 opset 算子的实现；不支持时明确拒绝。",
+        "Correct routing does not implement every historical opset; unsupported versions fail explicitly."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18911",
+      "sourceHead": "e667c82e8c3cea9e26675ccdbbc1969430296330",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#18933": {
+      "problem": [
+        "Relax 缺少 affine_grid 接口，已有 TOPI 计算难以直接供前端使用。",
+        "Relax lacked an affine_grid interface over the existing TOPI computation."
+      ],
+      "change": [
+        "补齐 C++/Python 注册、类型推导和 legalization，接入 PyTorch/ONNX，并转换网格输出布局。",
+        "Adds registration, inference, legalization and PyTorch/ONNX import with output-layout conversion."
+      ],
+      "scope": [
+        "范围限 2D 且 align_corners=True；PR 报告算子、降级和前端测试，不能声称完整 3D 支持。",
+        "Limited to 2D and align_corners=True; reported operator and frontend tests do not establish 3D support."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18933",
+      "sourceHead": "d6bd6ea92f9101c09acdcd91b22eb0485d3c2b59",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 11,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py",
+        "python/tvm/relax/frontend/torch/exported_program_translator.py",
+        "python/tvm/relax/op/image/__init__.py",
+        "python/tvm/relax/op/image/image.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_from_exported_program.py",
+        "tests/python/relax/test_frontend_onnx.py",
+        "tests/python/relax/test_op_image.py",
+        "tests/python/relax/test_transform_legalize_ops_image.py"
+      ]
+    },
+    "apache/tvm#18943": {
+      "problem": [
+        "目标检测后处理需要筛除低分框和经典 NMS，现有多类别接口不能覆盖全部组合需求。",
+        "Detection post-processing needed score compaction and classic NMS primitives."
+      ],
+      "change": [
+        "加入 get_valid_counts 与 classic NMS 的注册、TOPI、降级和 NumPy 对照，检查静态属性范围。",
+        "Adds Relax/TOPI implementations, legalization, NumPy references and static attribute checks."
+      ],
+      "scope": [
+        "经典 NMS 与 all_class_non_max_suppression 分开；动态元数据的属性校验不超出静态可知范围。",
+        "Classic and all-class NMS remain distinct; validation is bounded by available shape metadata."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18943",
+      "sourceHead": "6ac181f18737f7627bb494459f3a47a1fccc9863",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 14,
+      "implementationFiles": [
+        "include/tvm/relax/attrs/vision.h",
+        "python/tvm/relax/op/__init__.py",
+        "python/tvm/relax/op/op_attrs.py",
+        "python/tvm/relax/op/vision/nms.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_op_vision.py",
+        "tests/python/relax/test_tvmscript_parser_op_vision.py"
+      ]
+    },
+    "apache/tvm#18950": {
+      "problem": [
+        "ONNX Optional 值和微软域 MatMulInteger16 缺少对应导入表达。",
+        "ONNX Optional values and Microsoft-domain MatMulInteger16 lacked import support."
+      ],
+      "change": [
+        "用显式空 Optional 标记处理创建、判断、解包，补充 TYPE_PROTO 解析及整数矩阵乘转换。",
+        "Adds an explicit empty-Optional sentinel, type parsing, unwrapping and integer-matmul conversion."
+      ],
+      "scope": [
+        "覆盖空值拒绝、结构和数值测试；Optional 是导入期表示，不应理解为任意运行时对象系统。",
+        "Tests cover empty-value rejection, IR and numeric behavior; Optional handling is an import representation."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18950",
+      "sourceHead": "e18e0183dcdab78beab7ffa9ec5e270cc431eb90",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#18954": {
+      "problem": [
+        "Unsqueeze、Squeeze 和 Slice 对动态轴或运行时切片参数支持不足。",
+        "Unsqueeze, Squeeze and Slice had gaps for dynamic axes and slice parameters."
+      ],
+      "change": [
+        "提出运行时 shape 构造、动态 strided_slice 及重复轴、零步长检查。",
+        "Proposes runtime shape construction, dynamic slicing and checks for duplicate axes and zero steps."
+      ],
+      "scope": [
+        "该条是未合并方案；同主题另有 #18955，页面保留过程记录但不按已采用能力计数。",
+        "An unmerged proposal, separate from #18955; retained as process history rather than adopted functionality."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18954",
+      "sourceHead": "a91f90050fd59669bbe36d24d5ae52c487ab3d72",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#18955": {
+      "problem": [
+        "动态形状操作需要正确计算输出形状，同时保持常量路径简洁。",
+        "Shape operators need runtime shape handling without complicating constant paths."
+      ],
+      "change": [
+        "动态轴通过 shape tensor 和 reshape 降级；常量 Unsqueeze 合并为一次 reshape，并补充标量与非法参数测试。",
+        "Lowers dynamic axes through shape tensors and reshape, simplifying constant Unsqueeze to one reshape."
+      ],
+      "scope": [
+        "动态路径仍要求可知的 rank/轴长度；不是无限制动态形状支持。",
+        "Known rank/axis-length constraints remain; scalar and invalid-parameter regressions bound the support."
+      ],
+      "source": "https://github.com/apache/tvm/pull/18955",
+      "sourceHead": "1b50832a81d57c9b2fe10c88d5cd66a55e5fa717",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#19345": {
+      "problem": [
+        "TFLite 检测模型的自定义 DETECTION_POSTPROCESS 缺少 Relax 转换。",
+        "TFLite detection models lacked DETECTION_POSTPROCESS conversion."
+      ],
+      "change": [
+        "连接边框解码、NMS 和输出重排，并解析类别数、最大检测数及缩放参数。",
+        "Connects box decoding, NMS and output alignment with custom-option parsing."
+      ],
+      "scope": [
+        "这是初始后处理接入；后续量化 SSD 类别与重复 softmax 修复归属 #20291。",
+        "An initial integration; later quantized SSD class and softmax corrections belong to #20291."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19345",
+      "sourceHead": "7f34fca423cf6d68ea2ffa3f28e83a02bccfe81b",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 4,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_flexbuffer.py",
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py",
+        "python/tvm/relax/transform/legalize_ops/vision.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19408": {
+      "problem": [
+        "矩阵对角线和稀疏转稠密 converter 调用了不存在的 Relax 算子。",
+        "Diagonal and sparse-to-dense converters called nonexistent Relax operators."
+      ],
+      "change": [
+        "改用 call_dps_packed 形式引用 TOPI 名称，补齐输出类型信息和三个导入测试。",
+        "Changes them to call_dps_packed references with explicit output information and import tests."
+      ],
+      "scope": [
+        "本 PR 的导入测试通过不等于已证明对应 packed 函数可运行；不能仅凭结构覆盖宣称端到端闭环。",
+        "Passing import tests alone does not prove the referenced packed functions execute end to end."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19408",
+      "sourceHead": "2242817365652c871415113172d517682009e231",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19421": {
+      "problem": [
+        "DENSIFY 在导入期返回预取常量，下游却按普通运行时算子处理，导致空返回值或权重读取错误。",
+        "DENSIFY materializes constants during import, conflicting with ordinary runtime handling."
+      ],
+      "change": [
+        "在 normalize 前处理空返回，优先读取 prefetched 值，并修正全连接及转置卷积权重接入。",
+        "Handles empty converter returns and prefetched values, including downstream weight consumers."
+      ],
+      "scope": [
+        "DENSIFY 是转换期稀疏权重展开；不是新增运行时稀疏计算 Kernel。",
+        "Import-time sparse-weight materialization, not a runtime sparse-compute kernel."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19421",
+      "sourceHead": "f39a4cb7ac7c09fbe3eeda4b02c224ae850f059c",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19426": {
+      "problem": [
+        "soft-NMS 会衰减分数并改变候选顺序，不能沿用硬 NMS 的分数读取方式。",
+        "Soft-NMS changes scores and candidate order, unlike hard suppression."
+      ],
+      "change": [
+        "贯通 sigma 与阈值属性，返回衰减后分数、重新选择当前最优候选，并对齐 LiteRT 高斯衰减语义。",
+        "Threads sigma/threshold attributes through the stack and aligns decayed-score selection with LiteRT."
+      ],
+      "scope": [
+        "覆盖 Relax/TOPI 和 TFLite 路径；这是检测后处理语义修复，不是检测模型精度训练改进。",
+        "A post-processing semantic change with operator/frontend coverage, not improved model training accuracy."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19426",
+      "sourceHead": "7b4faca3a26497d161d3c260bf30d7df29210b8d",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 11,
+      "implementationFiles": [
+        "include/tvm/relax/attrs/vision.h",
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py",
+        "python/tvm/relax/op/vision/nms.py",
+        "python/tvm/relax/transform/legalize_ops/vision.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py",
+        "tests/python/relax/test_op_vision.py",
+        "tests/python/relax/test_tvmscript_parser_op_vision.py"
+      ]
+    },
+    "apache/tvm#19433": {
+      "problem": [
+        "运行时 dims 和 size_splits 无法被只接受常量的 FILL/SPLIT_V 路径处理。",
+        "Constant-only FILL/SPLIT_V paths rejected runtime dimensions and split sizes."
+      ],
+      "change": [
+        "将 dims 转成 Relax shape；将动态 split 拆为 cumsum 和动态切片，并以输出 tuple 数量确定分支数。",
+        "Converts dimensions to shapes and uses cumulative sizes plus dynamic slicing with model-defined output arity."
+      ],
+      "scope": [
+        "测试覆盖导入和编译契约；输出数量来自模型元数据，不靠猜测动态 size_splits 长度。",
+        "Import/compile coverage preserves the model’s output count instead of guessing dynamic tensor length."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19433",
+      "sourceHead": "01526566a8bd1d7c3157c7c6308a4564e0874389",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 4,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py",
+        "python/tvm/relax/transform/legalize_ops/create.py",
+        "src/relax/op/tensor/create.cc"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19468": {
+      "problem": [
+        "反向 STRIDED_SLICE 的 end_mask 边界可能漏掉下标 0。",
+        "Reverse slicing could omit index zero due to end-mask handling."
+      ],
+      "change": [
+        "修正负步长的排他下界，加入非单位步长、反向切片及静态 SPLIT_V 回归。",
+        "Corrects the exclusive lower bound for negative strides and adds slicing/static-split regressions."
+      ],
+      "scope": [
+        "动态 FILL/SPLIT_V 已由 #19433 单独处理；这里不重复归入该能力。",
+        "Dynamic FILL/SPLIT_V belongs to #19433, not this change."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19468",
+      "sourceHead": "be597ce57cad3f338f0e91bef0ca18a1e8b1e6ae",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19473": {
+      "problem": [
+        "TFLite 随机算子需要种子与运行时形状支持，而现有转换不完整。",
+        "TFLite random operators needed seeded calls and runtime shape support."
+      ],
+      "change": [
+        "为均匀/正态随机调用传入 seed；用 softmax、均匀样本和 multinomial_from_uniform 组合多项采样。",
+        "Adds seeded uniform/normal calls and composes multinomial sampling from existing Relax operations."
+      ],
+      "scope": [
+        "保留旧无种子调用兼容；支持种子不代表与 TFLite 随机序列逐比特一致。",
+        "Keeps unseeded compatibility; seed support is not a claim of bit-exact TFLite random sequences."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19473",
+      "sourceHead": "2da34044984baa5b154ff6d556af88876b1b8a4c",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 3,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py",
+        "src/runtime/contrib/random/random.cc"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19491": {
+      "problem": [
+        "分段求和、最小值和乘积缺少 TFLite 到 Relax 的映射。",
+        "Several TFLite segment reductions lacked Relax mappings."
+      ],
+      "change": [
+        "统一构造 scatter 索引、输出形状与各归约的单位元，用 scatter_nd 承担 add/min/mul。",
+        "Builds scatter indices, output shapes and reduction identities for add/min/multiply modes."
+      ],
+      "scope": [
+        "结构测试检查归约模式和初始化；正确单位元是空 segment 行为的重要部分。",
+        "IR tests inspect modes and initialization; identities matter for empty segments."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19491",
+      "sourceHead": "032b0db292e7730bb34e0db980bbd4abe023c315",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19515": {
+      "problem": [
+        "手写 importer 测试难以系统覆盖 ONNX 官方规范的边界输入。",
+        "Handwritten importer tests did not systematically cover official ONNX edge cases."
+      ],
+      "change": [
+        "实现 ONNX Backend 适配器，串起导入、降级、编译与 VM 执行，以明确 allowlist 接入官方测试。",
+        "Adds a backend adapter from import through VM execution and an explicit allowlist for the official suite."
+      ],
+      "scope": [
+        "未覆盖项仍跳过；PR 报告的 388 个通过用例不是 ONNX 全量支持，也不等于已接入全部 CI。",
+        "The reported 388 passing cases are a bounded subset, not full ONNX coverage or every CI suite."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19515",
+      "sourceHead": "a7b6c01a1514abd111fd0a1cb7dbdd69a77fbfee",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 1,
+      "implementationFiles": [],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx_backend.py"
+      ]
+    },
+    "apache/tvm#19536": {
+      "problem": [
+        "TFLite 中的 StableHLO builtin 使用独立元数据，不适合硬套普通 QNN/激活转换。",
+        "StableHLO builtins use metadata distinct from ordinary TFLite quantized operations."
+      ],
+      "change": [
+        "增加独立 unary/binary/ternary helpers 和 BuiltinOptions2 解析，接入 29 个初始算子子集。",
+        "Adds dedicated helpers and BuiltinOptions2 parsing for an initial 29-operator subset."
+      ],
+      "scope": [
+        "PAD、GATHER、动态切片等有明确子集限制；算子出现在列表中不代表支持所有属性组合。",
+        "PAD, GATHER and slicing retain explicit subset restrictions rather than supporting every attribute combination."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19536",
+      "sourceHead": "3060968dfb36270f953eda46df56f39fdaf5cef9",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19538": {
+      "problem": [
+        "前端遇到量化元数据就拒绝导入，残留 QNN 调用也不可达或无有效实现。",
+        "Quantization metadata blocked import before incomplete QNN paths could run."
+      ],
+      "change": [
+        "保留 scale、zero point 与量化轴，将支持路径表达为反量化 → 浮点 Relax 算子 → 再量化。",
+        "Preserves scales, zero points and axes, lowering supported operations through explicit float QDQ decomposition."
+      ],
+      "scope": [
+        "QDQ 首先打通导入与执行；不等同原生全整数 Kernel，也不能由此声称 INT8 加速。",
+        "Establishes an import path, not native all-integer kernels or an INT8 speedup claim."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19538",
+      "sourceHead": "c0b533db76356b52974ed9e745c9e7323a4e2bc1",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19587": {
+      "problem": [
+        "区域算子引用子图，原来只接受单子图的导入器无法表示这些结构。",
+        "Region operators reference subgraphs that the single-subgraph importer could not represent."
+      ],
+      "change": [
+        "允许主图与附属 region 共存，补充 10 个 StableHLO 算子子集，并让各 converter 按需消费 region。",
+        "Adds multi-subgraph infrastructure and ten additional StableHLO operator subsets with on-demand region handling."
+      ],
+      "scope": [
+        "仍只将主图作为 main；DOT/卷积/更新切片等按限定结构支持，不把任意子图全部执行。",
+        "Only the main graph becomes main; matrix, convolution and update patterns remain constrained."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19587",
+      "sourceHead": "5e558120ad086dff9b1f58addc986eeaa7eeec13",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19616": {
+      "problem": [
+        "CALL、IF、WHILE 需要子图调用与循环状态，不能简单逐算子展开。",
+        "CALL, IF and WHILE require subgraph calls and loop-carried state."
+      ],
+      "change": [
+        "共享子图转换状态，将纯张量区域降为私有 Relax 函数，用 If 与递归函数表达分支和循环。",
+        "Lowers pure-tensor regions to private Relax functions, using If and recursion for control flow."
+      ],
+      "scope": [
+        "CALL_ONCE 此阶段只支持空初始化；一般资源副作用不被当成纯函数偷偷导入。",
+        "At this stage CALL_ONCE supports empty initialization only; general resource side effects remain rejected."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19616",
+      "sourceHead": "1d4e5d3e15eb6ec62c1d61314dabd69af55dffe2",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19639": {
+      "problem": [
+        "资源变量与静态表的初始化在 CALL_ONCE 子图中，主图需要正确解析同一逻辑资源。",
+        "CALL_ONCE initialization and the main graph must resolve the same resources and static tables."
+      ],
+      "change": [
+        "加入共享资源初始化状态与句柄解析，处理变量赋值/读取，并支持静态 hashtable 导入及大小信息。",
+        "Adds shared initialization state, handle resolution, variable reads and static-table import/size handling."
+      ],
+      "scope": [
+        "以最终 diff 为准：描述早期文本仍写 hashtable 未支持；运行时可变状态和字符串查询没有被全面实现。",
+        "The final diff goes beyond the early body text; general mutable state and runtime string lookup remain unsupported."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19639",
+      "sourceHead": "43d5042e6f8a7e6cc78cf8327576eb601a08d135",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19646": {
+      "problem": [
+        "StableHLO WHILE 的条件与 body 索引放在不同 options 中，尚未接入已有循环降级。",
+        "StableHLO WHILE stores region references in a different options structure."
+      ],
+      "change": [
+        "抽出共享 while helper，解析 BuiltinOptions2 后复用私有函数与递归循环，并校验循环状态和 bool 条件。",
+        "Parses those options and reuses shared recursive lowering with loop-state and scalar-bool checks."
+      ],
+      "scope": [
+        "复用纯张量循环契约；区分 native 与 StableHLO 缓存键，避免两种包装错误共用。",
+        "Uses the pure-tensor contract and distinct cache keys for native and StableHLO wrappers."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19646",
+      "sourceHead": "e07e7d69dfeea05b48f29770fc521d6088c3f55a",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19649": {
+      "problem": [
+        "任意 custom call 没有可知的执行语义，直接映射会凭空赋予行为。",
+        "Arbitrary custom calls have no known executable semantics in this importer."
+      ],
+      "change": [
+        "仅把无副作用、单输入输出且类型形状一致的 Sharding 注释消除为 identity，其他 target 明确拒绝。",
+        "Erases only validated, side-effect-free Sharding annotations to identity and rejects other targets."
+      ],
+      "scope": [
+        "这是注释处理，不是通用 custom-call 执行器，也不保留多设备 sharding 执行语义。",
+        "Annotation handling, not a generic custom-call runtime or distributed execution support."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19649",
+      "sourceHead": "ea32937cd30c34cf8d4e12789293f1a5a09d3c1b",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19651": {
+      "problem": [
+        "随机位生成器要求状态与输出逐比特匹配，不能替换成任意随机算子。",
+        "The random-bit generator requires exact state and output semantics."
+      ],
+      "change": [
+        "用 TIR 实现 Threefry/Philox 的轮函数、计数器推进和输出打包，返回随机位及更新后的 uint64 状态。",
+        "Implements Threefry/Philox rounds, counter updates and word packing in TIR, returning bits and updated state."
+      ],
+      "scope": [
+        "算法、dtype 和状态长度均有限定；这是确定性随机位契约，不与普通随机分布算子混同。",
+        "Algorithms, dtypes and state lengths are explicitly bounded; distinct from generic random-distribution support."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19651",
+      "sourceHead": "d2ac81ac567268161f99453a072fb84424e17c6b",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19812": {
+      "problem": [
+        "Relax 没有原生 complex64 表示，TFLite RFFT2D 需要配套输出表示和计算降级。",
+        "RFFT2D needed a complex-output representation and compute lowering in Relax."
+      ],
+      "change": [
+        "用尾维大小 2 表示实虚部；根据空间维度选择 radix-2 FFT 或 DFT 参考 TIR Kernel。",
+        "Represents real/imaginary pairs on a trailing dimension and dispatches to radix-2 FFT or reference DFT TIR."
+      ],
+      "scope": [
+        "仅静态、无 padding/截断的 float32 路径；非二次幂 DFT 的正确性支持不等于高性能 FFT。",
+        "Static float32 with no padding/truncation; the non-power-of-two DFT fallback is not a high-performance FFT claim."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19812",
+      "sourceHead": "970f681a73ff969e9b36c29490b7a1d8fc8cc64c",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19813": {
+      "problem": [
+        "多个 builtin 缺少映射，FAKE_QUANT 还调用不存在的 const API。",
+        "Several builtins lacked mappings and FAKE_QUANT called an invalid constant API."
+      ],
+      "change": [
+        "复用 Relax 算子补充符号、位运算、bucketize、unique 和 segment 映射，并修正 FAKE_QUANT 常量构造。",
+        "Adds mappings through existing Relax operators and repairs FAKE_QUANT constant construction."
+      ],
+      "scope": [
+        "这是前端转换与回归；没有为每个新增映射编写独立底层 Kernel。",
+        "Frontend conversion and regression work, not separate new kernels for every mapped operation."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19813",
+      "sourceHead": "0ff302ee44fa2840d28250524739d7dfa168dc41",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19814": {
+      "problem": [
+        "REVERSE_SEQUENCE 把 TE 计算当成运行时 packed 函数调用，结构可导入却未形成合法执行路径。",
+        "REVERSE_SEQUENCE treated a TE compute as a runtime packed function."
+      ],
+      "change": [
+        "注册正式 Relax reverse_sequence 并经 LegalizeOps 降到 TIR；补齐 squeeze、unpack、zeros_like 与 VM 覆盖。",
+        "Adds a registered Relax operator legalized to TIR, alongside missing importer tests and VM coverage."
+      ],
+      "scope": [
+        "明确区分 IR 结构测试与实际编译执行，避免把函数名存在当作运行时可调用。",
+        "Separates structural import tests from actual compile/run checks."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19814",
+      "sourceHead": "e143b4d1b8e9ec4f4f009ca00f1e4df446b1f014",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 13,
+      "implementationFiles": [
+        "include/tvm/relax/attrs/manipulate.h",
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py",
+        "python/tvm/relax/op/__init__.py",
+        "python/tvm/relax/op/manipulate.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py",
+        "tests/python/relax/test_op_manipulate.py",
+        "tests/python/relax/test_transform_legalize_ops_manipulate.py"
+      ]
+    },
+    "apache/tvm#19824": {
+      "problem": [
+        "DELEGATE 等标记不是普通张量算子，通用 unsupported 报错无法说明原因。",
+        "Delegate/schema markers are not ordinary tensor operators."
+      ],
+      "change": [
+        "识别两个 schema/委托标记，路由到明确的 marker 诊断并补充拒绝路径测试。",
+        "Recognizes both markers and adds targeted diagnostics with rejection tests."
+      ],
+      "scope": [
+        "增加的是可解释报错，不是执行 DELEGATE 或支持任意外部 delegate。",
+        "Improves errors; it does not execute arbitrary delegates."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19824",
+      "sourceHead": "7cd904e3b73089a4f3ceaadb941c0d1a40122765",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19859": {
+      "problem": [
+        "旧 embedding、字符串和 hash 算子没有可靠 Relax 语义，泛化报错难区分坏模型与未支持功能。",
+        "Legacy embedding, string and hash operators lack sound Relax semantics."
+      ],
+      "change": [
+        "为 CONCAT_EMBEDDINGS、LSH_PROJECTION 和 SKIP_GRAM 增加选项/元数据检查与专用拒绝诊断。",
+        "Adds option/metadata validation and targeted rejection diagnostics for three legacy builtins."
+      ],
+      "scope": [
+        "本条未合并；同主题见 #19860。所谓 coverage 指识别和验证，不是成功执行这些算子。",
+        "Unmerged; see #19860 for the same topic. Coverage means recognition and validation, not execution."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19859",
+      "sourceHead": "c22556d7d1c7654324d57c731c418dadd8a3543a",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19860": {
+      "problem": [
+        "遗留 embedding 算子需要明确说明哪些元数据合法、哪些核心语义仍缺失。",
+        "Legacy embedding operators need precise metadata and unsupported-semantics diagnostics."
+      ],
+      "change": [
+        "解析三个 legacy builtin 的参数、形状和类型，然后给出字符串或 fingerprint hash 等缺失能力的诊断。",
+        "Validates their options, shapes and types before reporting missing string/hash behavior."
+      ],
+      "scope": [
+        "测试预期是针对性拒绝；不会把新增 handler 数量当成新增可执行算子数量。",
+        "Tests expect targeted rejection; more handlers do not mean more executable operators."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19860",
+      "sourceHead": "43a3c2c4aaeaeafa035fcbeeb591c27883d5320e",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19867": {
+      "problem": [
+        "RANGE 的运行时起点、终点和步长无法直接传入仅接受编译期边界的 arange。",
+        "Runtime RANGE bounds could not be passed directly to compile-time arange bounds."
+      ],
+      "change": [
+        "在图中先求元素个数，将其提升为输出维度，再用 arange(0,L)×delta+start 重建值，支持升序和降序。",
+        "Computes element count in the graph, lifts it to a dimension and reconstructs values from arange(0,L)."
+      ],
+      "scope": [
+        "常量路径保持不变；计数先行用于确保推导长度与运行结果一致，而不是单纯解除 guard。",
+        "Preserves the constant path and aligns inferred/runtime lengths, including descending ranges."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19867",
+      "sourceHead": "c1282345738bd0d21e64aa10e77e36120851ade5",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19879": {
+      "problem": [
+        "缺少字符串张量与运行时哈希表时，动态查表不能安全映射为一般张量算子。",
+        "Runtime string lookup cannot be represented without string tensors and a hashtable runtime."
+      ],
+      "change": [
+        "解析常量字符串 buffer，保存 CALL_ONCE 导入的键值，在查询也是常量时于导入阶段折叠为 Relax 常量。",
+        "Decodes constant string buffers and folds lookups over statically initialized keys/values during import."
+      ],
+      "scope": [
+        "仅可常量折叠的查表子集；重复键和运行时字符串查询受到明确限制。",
+        "Limited to constant-foldable queries, with explicit duplicate-key and dynamic-query restrictions."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19879",
+      "sourceHead": "9732138b0f941479df16a7a59512a834def46189",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19881": {
+      "problem": [
+        "DYNAMIC_UPDATE_SLICE 的动态 start 被拒绝，运行时计算偏移的模型无法导入。",
+        "Runtime start indices prevented DYNAMIC_UPDATE_SLICE import."
+      ],
+      "change": [
+        "在图内按轴 clamp start、生成广播索引网格，再复用 scatter_nd 更新原张量。",
+        "Clamps starts and builds broadcast index grids in the graph, reusing scatter_nd for updates."
+      ],
+      "scope": [
+        "动态路径使用 StableHLO 的越界夹取语义；不新增算子，静态路径仍保留原检查。",
+        "Uses StableHLO clamping for dynamic starts while preserving the existing static path."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19881",
+      "sourceHead": "0276e69900da40b0c53dd2959d7c318e62583f09",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#19897": {
+      "problem": [
+        "动态整数除数含零时，LLVM 可能触发整数除零崩溃。",
+        "A dynamic zero integer divisor could cause an LLVM division trap."
+      ],
+      "change": [
+        "先把零除数替成 1 以安全求商，再将原零位置输出设为 0；非零整数结果保持原语义。",
+        "Substitutes a safe divisor before division and returns zero on originally zero lanes."
+      ],
+      "scope": [
+        "ONNX 整数除零未定义，零输出是此实现的确定性策略；常量零除数仍在导入时拒绝。",
+        "Zero output is this implementation’s policy for undefined ONNX behavior; constant zero divisors remain rejected."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19897",
+      "sourceHead": "ea84457bf5566eaa9733489d622d515b287e029b",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#19898": {
+      "problem": [
+        "官方 ONNX 测试中的 CastLike 与动态 k Trilu 暴露前端支持缺口。",
+        "Official ONNX cases exposed missing CastLike and dynamic-k Trilu handling."
+      ],
+      "change": [
+        "根据第二输入 dtype 实现 CastLike，去除 Trilu 的常量 k 限制，并扩展官方节点测试 allowlist。",
+        "Adds dtype-driven CastLike, dynamic Trilu and a wider node-test allowlist."
+      ],
+      "scope": [
+        "通过数提升属于选定测试范围；仍排除名称碰撞的模型测试，不等同所有 ONNX 后端用例通过。",
+        "Coverage gains apply to the selected suite, not every ONNX backend case."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19898",
+      "sourceHead": "28afc0d24d2c444614c976e524c0a54aa1f5022f",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 3,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py",
+        "tests/python/relax/test_frontend_onnx_backend.py"
+      ]
+    },
+    "apache/tvm#19932": {
+      "problem": [
+        "部分转换仍调用已移除或不存在的 cast API，导致前端路径报错。",
+        "Some converters called removed or nonexistent cast APIs."
+      ],
+      "change": [
+        "将 FLOAT16 DEQUANTIZE 与量化 avgpool 内部转换改为 relax.op.astype，并补充针对性测试。",
+        "Uses relax.op.astype for FLOAT16 dequantization and the internal quantized-avgpool path with targeted tests."
+      ],
+      "scope": [
+        "该 PR 没有在顶层启用量化 avgpool；PR 还记录了无关的 broadcast_to 全文件测试失败。",
+        "Does not enable top-level quantized avgpool; the PR also records an unrelated full-file test failure."
+      ],
+      "source": "https://github.com/apache/tvm/pull/19932",
+      "sourceHead": "1c3e129c787f3eb078ce31c326b103a8cef1389b",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#20114": {
+      "problem": [
+        "StableHLO reshape、slice、transpose 尚未接入当前前端，已有贡献还需适配 review。",
+        "Three StableHLO shape mappings needed integration and review follow-up."
+      ],
+      "change": [
+        "接续 @Mohxen 的 #19869 实现，在当前主线补上三个映射及显式输入输出数量校验。",
+        "Carries forward @Mohxen’s #19869 implementation and adds explicit input/output arity checks on current main."
+      ],
+      "scope": [
+        "保留原作者贡献归属；支持静态 shape/属性子集，不能把接续工作写成全部独立原创。",
+        "Preserves original authorship and static-subset limits rather than claiming sole original implementation."
+      ],
+      "source": "https://github.com/apache/tvm/pull/20114",
+      "sourceHead": "ea3c1cf9aca35130948495ebec32e1bea5122558",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_tflite.py"
+      ]
+    },
+    "apache/tvm#20115": {
+      "problem": [
+        "合法的低 rank PRelu slope 按尾维广播，却被要求与输入同 rank 的 converter 拒绝。",
+        "Valid lower-rank PRelu slopes were rejected despite trailing-dimension broadcasting."
+      ],
+      "change": [
+        "对齐 slope 的非广播维到输入轴，reshape 为 Relax 可表达的一维 slope，并处理 rank-zero 情况。",
+        "Maps the non-broadcast slope dimension to the input axis and reshapes to Relax’s one-dimensional slope form."
+      ],
+      "scope": [
+        "仍拒绝多个非广播维的 slope；结构与 ONNX Runtime 数值回归覆盖可表示子集。",
+        "Multiple non-broadcast dimensions remain unsupported; structural and numerical tests cover the representable subset."
+      ],
+      "source": "https://github.com/apache/tvm/pull/20115",
+      "sourceHead": "1535daba8805a29339b3f870136811100e9f334d",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 2,
+      "implementationFiles": [
+        "python/tvm/relax/frontend/onnx/onnx_frontend.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py"
+      ]
+    },
+    "apache/tvm#20126": {
+      "problem": [
+        "零维张量没有有效轴，但 per-tensor QDQ 本来不应依赖 axis。",
+        "Rank-zero tensors have no valid axis, while per-tensor QDQ should not require one."
+      ],
+      "change": [
+        "对标量输入跳过轴范围检查，同时要求标量或单元素 scale/zero point；保持高 rank 校验不变。",
+        "Skips scalar axis checks only with scalar/singleton quantization parameters, preserving higher-rank rules."
+      ],
+      "scope": [
+        "修复核心类型推导并补 ONNX 数值与 dtype 回归；不放宽 per-axis 量化约束。",
+        "Core inference and ONNX numerical/dtype coverage do not relax per-axis quantization constraints."
+      ],
+      "source": "https://github.com/apache/tvm/pull/20126",
+      "sourceHead": "a27683f397607298cfa714b195be123ae4e3bb50",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 3,
+      "implementationFiles": [
+        "src/relax/op/tensor/qdq.cc"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py",
+        "tests/python/relax/test_op_qdq.py"
+      ]
+    },
+    "apache/tvm#20291": {
+      "problem": [
+        "量化 SSD 的类别、分数与 depthwise 权重布局处理不一致，导致检测结果错误。",
+        "Quantized SSD had inconsistent class, score and depthwise-weight conversion."
+      ],
+      "change": [
+        "去掉可选背景类别和重复 softmax，接通 pooling QDQ，并在重排前按原通道轴反量化 depthwise 权重。",
+        "Removes optional background/double softmax, enables pooling QDQ and dequantizes depthwise weights before layout conversion."
+      ],
+      "scope": [
+        "保留通用算子默认行为；仍是 QDQ 路径，低置信度框可能重排，不宣称完整整数语义或性能提升。",
+        "Preserves generic defaults; remains a QDQ path with possible low-confidence reordering, not a full-integer speedup claim."
+      ],
+      "source": "https://github.com/apache/tvm/pull/20291",
+      "sourceHead": "186d9661f5d756677c7f80acec3462892cebded1",
+      "reviewedAt": "2026-09-14T06:26:19.503470+00:00",
+      "changedFileCount": 11,
+      "implementationFiles": [
+        "include/tvm/relax/attrs/vision.h",
+        "python/tvm/relax/frontend/tflite/tflite_frontend.py",
+        "python/tvm/relax/op/vision/multibox_transform_loc.py",
+        "python/tvm/relax/transform/legalize_ops/vision.py"
+      ],
+      "testFiles": [
+        "tests/python/relax/test_frontend_onnx.py",
+        "tests/python/relax/test_frontend_tflite.py",
+        "tests/python/relax/test_op_vision.py",
+        "tests/python/relax/test_tvmscript_parser_op_vision.py"
+      ]
+    }
+  }
+}

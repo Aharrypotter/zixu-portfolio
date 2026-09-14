@@ -1,0 +1,10 @@
+{
+  "name": "zixu-portfolio",
+  "compatibility_date": "2026-09-14",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./public",
+    "html_handling": "none",
+    "not_found_handling": "404-page"
+  }
+}

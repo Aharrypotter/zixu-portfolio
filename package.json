@@ -1,0 +1,11 @@
+{
+  "name": "zixu-portfolio",
+  "private": true,
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "4.131.2"
+  }
+}
