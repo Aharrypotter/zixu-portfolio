@@ -10,3 +10,5 @@
 .about-portrait img{display:block;width:100%;max-width:100%;height:auto;aspect-ratio:2/3;border-radius:3px}
 .about-portrait figcaption{margin-top:14px;font-size:14px}.about-portrait figcaption span{display:block;font-size:10px;letter-spacing:.14em;color:#777;margin-top:5px}
 @media(max-width:700px){.about-grid.about-with-portrait{grid-template-columns:minmax(0,1fr);gap:28px}.about-portrait{justify-self:start;width:140px;margin:0}}
+
+.honors-list{list-style:none;margin:28px 0 0;padding:0;border-top:1px solid #ccd0d5}.honors-list li{display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:18px;row-gap:6px;padding:18px 0;border-bottom:1px solid #ccd0d5;font-size:15px;line-height:1.6}.honor-year{grid-row:span 2;font:12px/1.8 monospace;color:#535b64;padding-top:2px}.honor-name{color:#30363c}.honors-list strong{grid-column:2;font-size:14px;font-weight:500;color:#30363c}.honors-list li:first-child strong{font-weight:700;color:#2149c2}@media(max-width:480px){.honors-list li{column-gap:12px;font-size:14px}}
