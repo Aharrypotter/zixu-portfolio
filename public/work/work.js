@@ -1,8 +1,8 @@
 // Shared project narratives live in ../script.js. Each record can belong to multiple fields.
 const categories = [
-  ['all','全部项目','All projects'], ['open-source','开源','Open source'],
-  ['compiler','编译器','Compilers'], ['inference','推理框架','Inference'],
-  ['kernel','Kernel 优化','Kernel optimization'], ['dsl','DSL','DSL']
+  ['all','方向总览','Overview'], ['compiler','编译器与 DSL','Compilers & DSL'],
+  ['kernel','GPU / CPU 算子','GPU / CPU kernels'], ['inference','推理系统','Inference systems'],
+  ['open-source','上游贡献','Upstream contributions'], ['dsl','DSL 专项','DSL focus']
 ];
 const resourceTypes = [['all','全部链接','All links'],['github','GitHub','GitHub'],['pr','Pull Request','Pull request'],['article','技术文章','Articles'],['wechat','公众号','WeChat']];
 const workMeta = {
@@ -42,9 +42,26 @@ function externalLink(r){
   if(url.protocol!=='https:')throw new Error('Portfolio resources must use HTTPS');
   return `<a href="${escapeHTML(url.href)}" target="_blank" rel="noopener noreferrer"><small>${escapeHTML(typeLabel(r.type))}</small>${escapeHTML(tr(r.label))} ↗</a>`;
 }
+
+const directionGuides={
+ all:{title:['从三个方向了解我的工作','Explore three areas of my work'],text:['我关注计算如何被表达、映射到硬件并正确运行。下面三个入口分别对应编译器、算子和推理系统团队；每项经历都区分个人工作与交付结果。','I work on how computation is expressed, mapped to hardware and executed correctly. Start with compiler, kernel or inference work; each case separates my contribution from its outcome.'],ids:['dsl','lightning','jax']},
+ compiler:{title:['计算表达、布局映射与编译正确性','Computation, layouts and compiler correctness'],text:['我参与 DSL / Layout 研发，并修复真实模型暴露的前端语义问题。先看 FlagLang 的设计实现，再看 TVM 的上游修复；TIRx 展示向硬件执行路径深入的工作。','I contribute to DSL/layout development and frontend semantic fixes driven by real models. Start with FlagLang design, then TVM upstream work; TIRx explores hardware execution paths.'],ids:['dsl','tvm','tirx']},
+ kernel:{title:['围绕数据搬运与流水线优化算子','Optimizing data movement and kernel pipelines'],text:['我实现 GPU 算子并验证状态管理、变长输入和数值正确性。先看 cuLA 的已合并实现，再看 TIRx；端侧 CPU 优化作为补充经历。性能结果仅适用于各项目列出的测试条件。','I implement GPU kernels and validate state management, variable-length inputs and numerical correctness. Start with merged cuLA work, then TIRx; mobile CPU work adds another perspective. Performance claims apply only to their stated test conditions.'],ids:['lightning','tirx','mobile']},
+ inference:{title:['让模型与运行时正确协作','Making models and runtimes work together'],text:['我处理运行时兼容、分片契约和模型执行问题。先看 SGLang-JAX 的升级与 TPU 验证，再看端侧模型支持；这些经历侧重执行正确性与集成。','I work on runtime compatibility, sharding contracts and model execution. Start with SGLang-JAX migration and TPU validation, then on-device model support; these cases emphasize correctness and integration.'],ids:['jax','mobile']},
+ 'open-source':{title:['从具体问题到公开评审与交付','From concrete problems to upstream delivery'],text:['优先阅读有公开评审的代表工作。已合并、评审中与本地研发分别标注；贡献数量和性能数字以证据日期及测试范围为准。','Start with representative work that has public reviews. Merged, in-review and local research states are distinguished; counts and performance follow their evidence dates and scope.'],ids:['tvm','lightning','jax']},
+ dsl:{title:['用真实算子检验语言设计','Testing language design against real kernels'],text:['从 FlagLang 的计算与布局表达开始，再查看 CuTe DSL 与 TIRx 中的执行路径。重点是语言表达如何落到可验证的实现。','Start with FlagLang computation and layouts, then CuTe DSL and TIRx execution paths. The focus is turning language abstractions into verifiable implementations.'],ids:['dsl','lightning','tirx']}
+};
+function renderDirectionGuide(){
+ const host=document.querySelector('#direction-guide');if(!host)return;
+ const g=directionGuides[category]||directionGuides.all;
+ host.innerHTML=`<p class="direction-label">${tr(['阅读起点','START HERE'])}</p><h2>${escapeHTML(tr(g.title))}</h2><p>${escapeHTML(tr(g.text))}</p><nav aria-label="推荐阅读">${g.ids.map((id,i)=>{const p=workItems.find(p=>p.id===id);return p?`<a href="#${id}"><span>0${i+1}</span>${escapeHTML(tr(p.title))} ↘</a>`:''}).join('')}</nav>`;
+}
+
 function renderWork(){
+  renderDirectionGuide();
   document.querySelector('#category-filters').innerHTML=categories.map(([id,zh,en])=>`<button type="button" data-category="${id}" aria-pressed="${id===category}">${language==='zh'?zh:en}<span>${workItems.filter(p=>id==='all'||p.categories.includes(id)).length}</span></button>`).join('');
-  const visible=workItems.filter(matches);
+  const order=(directionGuides[category]||directionGuides.all).ids;
+  const visible=workItems.filter(matches).sort((a,b)=>(order.includes(a.id)?order.indexOf(a.id):99)-(order.includes(b.id)?order.indexOf(b.id):99));
   document.querySelector('#result-count').textContent=language==='zh'?`${visible.length} 项工作 · 同一项目可跨领域归类`:`${visible.length} works · Projects may span multiple fields`;
   document.querySelector('#work-list').innerHTML=visible.map(p=>`<article class="work-entry" id="${p.id}" aria-labelledby="title-${p.id}">
     <aside class="work-aside"><div class="work-number">${String(workItems.indexOf(p)+1).padStart(2,'0')}</div><div class="work-domain">${p.categories.map(c=>escapeHTML(categories.find(t=>t[0]===c)[language==='zh'?1:2])).join(' / ')}</div><span class="work-status ${p.merged?'merged':''}">${escapeHTML(tr(p.status))}</span></aside>
