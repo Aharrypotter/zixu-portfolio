@@ -109,3 +109,5 @@
   window.addEventListener('pageshow', event => { if (event.persisted) { navigating = false; curtain?.getAnimations().forEach(a => a.cancel()); } });
   root.classList.add('editorial-ready');
 })();
+
+function revealPortfolioHash(){const id=decodeURIComponent(location.hash.slice(1));if(!id)return;const el=document.getElementById(id);if(!el)return;let parent=el.parentElement;let opened=false;while(parent){if(parent.tagName==='DETAILS'&&!parent.open){parent.open=true;opened=true;}parent=parent.parentElement;}if(opened)el.scrollIntoView();}window.addEventListener('hashchange',revealPortfolioHash);revealPortfolioHash();
