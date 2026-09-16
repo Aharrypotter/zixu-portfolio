@@ -24,7 +24,7 @@ const workItems = projects.flatMap(p=>p.id==='tvm' ? [
 
 // Add confirmed articles here: {project:'dsl',type:'wechat'|'article',label:['中文','English'],url:'https://…'}.
 // Never use a search page or a placeholder as a published article.
-const editorialResources = [];
+const editorialResources = [{project:'kv-research',type:'article',label:['EdgeKV · 系统设计与实验','EdgeKV · System design and experiments'],url:'https://zixuwang.me/edgekv/'}];
 const resources = workItems.flatMap(p=>[
   ...(p.repo?[{project:p.id,type:'github',label:[p.repo[0],p.repo[0]],url:p.repo[1]}]:[]),
   ...p.links.map(([label,url])=>({project:p.id,type:url.includes('/pull/')?'pr':'github',label:[label,label],url}))
@@ -47,7 +47,7 @@ const directionGuides={
  all:{title:['从三个方向了解我的工作','Explore three areas of my work'],text:['我关注计算如何被表达、映射到硬件并正确运行。下面三个入口分别对应编译器、算子和推理系统团队；每项经历都区分个人工作与交付结果。','I work on how computation is expressed, mapped to hardware and executed correctly. Start with compiler, kernel or inference work; each case separates my contribution from its outcome.'],ids:['dsl','lightning','jax']},
  compiler:{title:['计算表达、布局映射与编译正确性','Computation, layouts and compiler correctness'],text:['我参与 DSL / Layout 研发，并修复真实模型暴露的前端语义问题。先看 FlagLang 的设计实现，再看 TVM 的上游修复；TIRx 展示向硬件执行路径深入的工作。','I contribute to DSL/layout development and frontend semantic fixes driven by real models. Start with FlagLang design, then TVM upstream work; TIRx explores hardware execution paths.'],ids:['dsl','tvm','tirx']},
  kernel:{title:['围绕数据搬运与流水线优化算子','Optimizing data movement and kernel pipelines'],text:['我实现 GPU 算子并验证状态管理、变长输入和数值正确性。先看 cuLA 的已合并实现，再看 TIRx；端侧 CPU 优化作为补充经历。性能结果仅适用于各项目列出的测试条件。','I implement GPU kernels and validate state management, variable-length inputs and numerical correctness. Start with merged cuLA work, then TIRx; mobile CPU work adds another perspective. Performance claims apply only to their stated test conditions.'],ids:['lightning','tirx','mobile']},
- inference:{title:['让模型与运行时正确协作','Making models and runtimes work together'],text:['我处理运行时兼容、分片契约和模型执行问题。先看 SGLang-JAX 的升级与 TPU 验证，再看端侧模型支持；这些经历侧重执行正确性与集成。','I work on runtime compatibility, sharding contracts and model execution. Start with SGLang-JAX migration and TPU validation, then on-device model support; these cases emphasize correctness and integration.'],ids:['jax','mobile']},
+ inference:{title:['让模型与运行时正确协作','Making models and runtimes work together'],text:['我处理运行时兼容、分片契约和模型执行问题。先看 EdgeKV 的存储与数据搬运，再看 SGLang-JAX 的升级与 TPU 验证，以及端侧模型支持。','I work on runtime compatibility, sharding contracts and model execution. Start with EdgeKV storage and data movement, then SGLang-JAX migration, TPU validation and on-device model support.'],ids:['kv-research','jax','mobile']},
  'open-source':{title:['从具体问题到公开评审与交付','From concrete problems to upstream delivery'],text:['优先阅读有公开评审的代表工作。已合并、评审中与本地研发分别标注；贡献数量和性能数字以证据日期及测试范围为准。','Start with representative work that has public reviews. Merged, in-review and local research states are distinguished; counts and performance follow their evidence dates and scope.'],ids:['tvm','lightning','jax']},
  dsl:{title:['用真实算子检验语言设计','Testing language design against real kernels'],text:['从 FlagLang 的计算与布局表达开始，再查看 CuTe DSL 与 TIRx 中的执行路径。重点是语言表达如何落到可验证的实现。','Start with FlagLang computation and layouts, then CuTe DSL and TIRx execution paths. The focus is turning language abstractions into verifiable implementations.'],ids:['dsl','lightning','tirx']}
 };
